@@ -66,6 +66,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item {{ request()->routeIs('admin.orders') ? 'active' : '' }}">
+                    <a href="{{ route('admin.orders') }}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Orders</p>
+                    </a>
+                </li>
+
                 {{-- <li class="nav-item {{ request()->routeIs('admin.agents') ? 'active' : '' }}">
                 <a href="{{ route('admin.agents') }}">
                     <i class="fas fa-user-tie"></i>

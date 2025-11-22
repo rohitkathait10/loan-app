@@ -12,8 +12,8 @@ class Order extends Model
     protected $table = 'orders';
 
      protected $fillable = [
-        'razorpay_order_id', 'customer_id', 'user_id','amount', 'currency',
-        'status', 'payment_id', 'signature'
+        'cashfree_order_id', 'customer_id', 'user_id','amount', 'currency',
+        'status', 'payment_id', 'signature','utr','payment_screenshot'
     ];
 
     public function customer()

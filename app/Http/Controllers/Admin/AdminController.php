@@ -71,4 +71,8 @@ class AdminController extends Controller
         return view('admin.enquiry', compact('enquiries'));
     }
 
+    public function showMembershipCard()
+    {
+        return view('admin.membership-card');
+    }
 }

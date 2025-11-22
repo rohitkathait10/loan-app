@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $validFrom = now()->format('d/m/Y');
+        $validTo = now()->addMonths(6)->format('d/m/Y');
+    @endphp
     <div class="page-inner">
         <div class="page-header">
             <h4 class="page-title">MEMBERSHIP CARD</h4>
@@ -48,10 +52,6 @@
                                     <div class="card-holder-name">Full Name</div>
                                 </div>
                             </div>
-                            <button class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#updateCardModal"
-                                data-card-id="1" data-card-type="Excellent">
-                                <i class="fas fa-edit"></i> Update Excellent Card
-                            </button>
                         </div>
 
                         <div class="col-md-6 text-center mb-4">
@@ -71,66 +71,12 @@
                                     <div class="card-holder-name">Full Name</div>
                                 </div>
                             </div>
-                            <button class="btn btn-warning mt-3" data-bs-toggle="modal" data-bs-target="#updateCardModal"
-                                data-card-id="2" data-card-type="Meta">
-                                <i class="fas fa-edit"></i> Update Meta Card
-                            </button>
                         </div>
                     </div> <!-- end row -->
                 </div>
             </div>
         </div>
 
-    </div>
-
-
-    {{-- Update Modal --}}
-    <div class="modal fade" id="updateCardModal" tabindex="-1" aria-labelledby="updateCardModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('admin.membership-card.update') }}" enctype="multipart/form-data"
-                class="modal-content">
-                @csrf
-
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updateCardModalLabel">Update Membership Card</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <input type="hidden" name="card_id" id="card_id">
-
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Card Name</label>
-                        <input type="text" class="form-control" name="name" id="name" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="price" class="form-label">Price</label>
-                        <input type="number" class="form-control" name="price" id="price" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="original_price" class="form-label">Original Price</label>
-                        <input type="number" class="form-control" name="original_price" id="original_price" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="type" class="form-label">Type</label>
-                        <input type="text" class="form-control" name="type" id="type" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="tenure" class="form-label">Tenure (Months)</label>
-                        <input type="number" class="form-control" name="tenure" id="tenure" required>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Update</button>
-                </div>
-            </form>
-        </div>
     </div>
 @endsection
 
@@ -197,28 +143,6 @@
         document.getElementById('downloadSilverCardBtn').addEventListener('click', function(e) {
             e.preventDefault();
             downloadCard("#membershipCard", "meta-membership-card.png");
-        });
-
-
-        const cards = @json($cards);
-
-        const updateModal = document.getElementById('updateCardModal');
-        updateModal.addEventListener('show.bs.modal', event => {
-            const button = event.relatedTarget;
-            const cardId = button.getAttribute('data-card-id');
-            const cardType = button.getAttribute('data-card-type');
-
-            updateModal.querySelector('#updateCardModalLabel').textContent =
-                `Update ${cardType} Membership Card`;
-
-            const card = cards.find(c => c.id == cardId);
-
-            updateModal.querySelector('#card_id').value = card.id;
-            updateModal.querySelector('#name').value = card.name;
-            updateModal.querySelector('#price').value = card.price;
-            updateModal.querySelector('#original_price').value = card.original_price;
-            updateModal.querySelector('#type').value = card.type;
-            updateModal.querySelector('#tenure').value = card.tenure;
         });
     </script>
 @endpush

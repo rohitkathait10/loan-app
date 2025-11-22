@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\PaymentController;
 |
 */
 
-
+Route::post('/plans/personal', [CustomerController::class, 'register'])->name('personal.loan.store');
 
 // Personal Loan Application Flow
 
@@ -29,7 +29,7 @@ Route::post('/personal-loan/checkeligibility/{id}', [CustomerController::class, 
 Route::post('/personal-loan/approval/{id}', [CustomerController::class, 'storeApproval'])->name('personal.store.approval');
 
 
-// Razorpay apis
+// Cashfree apis
 
 Route::post('/create-order', [PaymentController::class, 'createOrder']);
 Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
@@ -39,7 +39,6 @@ Route::post('/verify-payment', [PaymentController::class, 'verifyPayment']);
 Route::post('/contact/form/submit', [CustomerController::class, 'contactSubmit'])
     ->middleware('throttle:5,1')
     ->name('contact.form.submit');
-
 
 
 

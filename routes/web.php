@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\AdminLeadController;
 use App\Http\Controllers\Admin\AdminSupportController;
 use App\Http\Controllers\Admin\AdminAgentController;
 use App\Http\Controllers\Admin\AdminAdvertisementController;
-use App\Http\Controllers\Admin\MembershipCardController;
+use App\Http\Controllers\Admin\AdminOrderController;
 
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\KycController;
@@ -20,6 +20,10 @@ use App\Http\Controllers\User\OfferController;
 use App\Http\Controllers\User\LoanController;
 use App\Http\Controllers\User\UserReferralController;
 use App\Http\Controllers\User\SupportController;
+
+Route::get('/create-order-form', function () {
+    return view('create-order');
+});
 
 
 // user routes
@@ -64,8 +68,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/profile/update', [AdminProfileController::class, 'updateProfile'])->name('profile.update');
     Route::post('/change-password', [AdminProfileController::class, 'changePassword'])->name('change-password');
 
-    Route::get('/membership-card', [MembershipCardController::class, 'index'])->name('membership-card');
-    Route::post('/membership-card/update', [MembershipCardController::class, 'update'])->name('membership-card.update');
+    Route::get('/membership-card', [AdminController::class, 'showMembershipCard'])->name('membership-card');
 
     Route::get('/customers', [AdminUserController::class, 'index'])->name('users');
     Route::get('/customers/show/{id}', [AdminUserController::class, 'show'])->name('users.show');
@@ -79,6 +82,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/leads', [AdminLeadController::class, 'index'])->name('leads');
     Route::get('/leads/show/{id}', [AdminLeadController::class, 'show'])->name('leads.show');
+
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders');
+    Route::get('/orders/show/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/update-status/{order}', [AdminOrderController::class, 'updateStatus'])
+     ->name('orders.update-status');
+
 
     Route::get('/agents', [AdminAgentController::class, 'index'])->name('agents');
     Route::get('/agent/store', [AdminAgentController::class, 'add'])->name('agent.add');
