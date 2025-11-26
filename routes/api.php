@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PlansController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +17,9 @@ use App\Http\Controllers\Api\PaymentController;
 |
 */
 
-Route::post('/plans/personal', [CustomerController::class, 'register'])->name('personal.loan.store');
+
+Route::get('/plans/personal', [PlansController::class, 'fetchPersonalPlan'])->name('fetch.plan');
+Route::get('/plans/business', [PlansController::class, 'fetchBusinessPlan'])->name('fetch.plan');
 
 // Personal Loan Application Flow
 

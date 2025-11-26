@@ -30,6 +30,7 @@ class Customer extends Model
         'referred_by',
         'status',
         'otp',
+        'otp_session',
         'is_otp_verify',
         'ip_address',
         'browser',

@@ -8,6 +8,7 @@ use Razorpay\Api\Api;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Plan;
 use App\Models\ReferralReward;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -23,19 +24,37 @@ class PaymentController extends Controller
 {
     public function createOrder(Request $request)
     {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'plan_id'     => 'required|exists:plans,id'
+        ]);
+
         $customer = Customer::findOrFail($request->customer_id);
 
-        $amount = $customer->loan_type === 'business' ? 699 : 499;
+        $planType = $customer->loan_type == 'business' ? 'business' : 'personal';
+
+        $selectedPlan = Plan::where('id', $request->plan_id)
+            ->where('plan_type', $planType)
+            ->first();
+
+        if (!$selectedPlan) {
+            return response()->json([
+                'success' => false,
+                'message' => "Invalid plan selected for {$planType} customer."
+            ], 400);
+        }
+
+        $amount = $selectedPlan->price;
         $upiId = "Q766305794@ybl";
         $orderIdentifier = "UPI_" . uniqid();
 
         $upiString = "upi://pay?pa={$upiId}&pn=KredifyLoans&am={$amount}&cu=INR&tn={$orderIdentifier}";
 
         $folder = 'upi_qr';
-        Storage::disk('public')->deleteDirectory($folder);
         Storage::disk('public')->makeDirectory($folder);
 
-        $qrFile = $folder . '/membership.svg';
+        $filename = $orderIdentifier . '.svg';
+        $qrFile = $folder . '/' . $filename;
 
         $renderer = new ImageRenderer(
             new RendererStyle(400),
@@ -44,6 +63,7 @@ class PaymentController extends Controller
 
         $writer = new Writer($renderer);
         $qrSvg = $writer->writeString($upiString);
+
         Storage::disk('public')->put($qrFile, $qrSvg);
 
         $qrUrl = asset('storage/' . $qrFile);
@@ -51,6 +71,7 @@ class PaymentController extends Controller
         $order = Order::create([
             'cashfree_order_id' => $orderIdentifier,
             'customer_id'       => $customer->id,
+            'plan_id'           => $selectedPlan->id,
             'amount'            => $amount,
             'currency'          => 'INR',
             'status'            => 'created',
@@ -59,12 +80,16 @@ class PaymentController extends Controller
 
         return response()->json([
             "success"  => true,
-            "order_id" => $order->id, 
+            "message"  => "Order created successfully.",
+            "order_id" => $order->id,
+            "customer_id" => $order->customer_id,
             "amount"   => $amount,
+            "plan"     => $selectedPlan->only(['id', 'months', 'price']),
             "qr_url"   => $qrUrl,
             "upi_link" => $upiString
         ]);
     }
+
 
     public function verifyPayment(Request $request)
     {
@@ -75,7 +100,7 @@ class PaymentController extends Controller
             'payment_screenshot' => 'required|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-       $order = Order::find($request->order_id);
+        $order = Order::find($request->order_id);
 
         if (!$order) {
             return response()->json([

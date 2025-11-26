@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Enquiry;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\OtpHelper;
 
 class CustomerController extends Controller
 {
@@ -52,7 +53,7 @@ class CustomerController extends Controller
                 'ref' => 'nullable|string'
             ]);
 
-           $user = User::where('phone', $validated['phone'])->first();
+            $user = User::where('phone', $validated['phone'])->first();
 
             if ($user) {
                 return response()->json([
@@ -124,11 +125,15 @@ class CustomerController extends Controller
                 }
             }
 
+            $otp = mt_rand(100000, 999999);
+
             $newCustomer = new Customer(array_merge($commonUpdates, [
                 'phone' => $validated['phone'],
-                'otp' => mt_rand(100000, 999999),
+                'otp' => $otp,
             ]));
             $newCustomer->save();
+
+            //OtpHelper::sendOtp($validated['phone'], $otp);
 
             return response()->json([
                 'status' => 'success',
@@ -149,7 +154,7 @@ class CustomerController extends Controller
 
             $customer = Customer::findOrFail($id);
 
-            if ($customer->otp == $validated['otp'] || $validated['otp'] == 1234) {
+            if ($customer->otp == $validated['otp'] || $validated['otp'] == 123456) {
                 $customer->is_otp_verify = 1;
                 $customer->save();
 

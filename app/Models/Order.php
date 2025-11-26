@@ -13,7 +13,7 @@ class Order extends Model
 
      protected $fillable = [
         'cashfree_order_id', 'customer_id', 'user_id','amount', 'currency',
-        'status', 'payment_id', 'signature','utr','payment_screenshot'
+        'status', 'payment_id', 'signature','utr','payment_screenshot','plan_id'
     ];
 
     public function customer()
