@@ -26,12 +26,15 @@ class CheckMembership
             }
 
             if ($user->membership_status == 0) {
-                return redirect()->route('customer.renewal')->with('swal', [
-                    'title' => 'Membership Expired',
-                    'text' => 'Your membership has expired. Please renew to continue.',
-                    'icon' => 'warning',
-                ]);
-            } 
+
+                auth()->logout();
+
+                return redirect()->route('login')
+                    ->with('swal', true)
+                    ->with('swal.title', 'Membership Expired')
+                    ->with('swal.text', 'Your membership has expired. Please contact the support to continue.')
+                    ->with('swal.icon', 'warning');
+            }
         }
 
         return $next($request);

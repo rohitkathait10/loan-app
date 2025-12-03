@@ -211,9 +211,10 @@
             font-style: italic;
         }
 
-        .rupee {
-            font-family: Arial, sans-serif;
+      .rupee {
+            font-family: 'DejaVu Sans', sans-serif !important;
         }
+
     </style>
 </head>
 
@@ -289,7 +290,7 @@
         <div class="payment-section">
             <div class="section-title">Payment Details</div>
             <div class="payment-info">Payment Method: {{ $payment['method'] }}</div>
-            <div class="payment-info">Payment Id: {{ $payment['id'] }}</div>
+            {{-- <div class="payment-info">Payment Id: {{ $payment['id'] }}</div> --}}
         </div>
 
         <table class="footer-table">

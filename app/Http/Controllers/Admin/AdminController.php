@@ -60,8 +60,9 @@ class AdminController extends Controller
     {
         $customer = Customer::where('status', 0)->count();
         $user = User::where('role', 0)->count();
+        $enquiry = Enquiry::all()->count();
 
-        return view('admin.dashboard', compact('user', 'customer'));
+        return view('admin.dashboard', compact('user', 'customer', 'enquiry'));
     }
 
     public function showEnquiry()

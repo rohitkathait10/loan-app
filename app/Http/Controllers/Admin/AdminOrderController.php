@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Customer;
 use App\Models\User;
+use App\Models\Plan;
 
 class AdminOrderController extends Controller
 {
@@ -42,9 +43,13 @@ class AdminOrderController extends Controller
             $customer->status = 1;
             $customer->save();
 
+            $plan = Plan::where('id', $order->plan_id)->first();
+
+            $months = $plan->months;
+
             $membershipTier   = $customer->loan_type === 'business' ? "excellent" : "meta";
             $now              = now();
-            $membershipEnd    = $now->copy()->addMonths(6);
+            $membershipEnd    = $now->copy()->addMonths($months);
             $membershipCardNo = $this->generateCardNumber($customer->id, 1);
 
             $user = User::firstOrCreate(

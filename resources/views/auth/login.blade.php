@@ -80,13 +80,16 @@
 @endsection
 
 @push('scripts')
-    @if (session('swal'))
+    @if (session()->has('swal.title'))
         <script>
-            Swal.fire({
-                title: '{{ session('swal.title') }}',
-                text: '{{ session('swal.text') }}',
-                icon: '{{ session('swal.icon') }}',
-                confirmButtonText: 'OK'
+            alertify.alert(
+                @json(session('swal.title')),
+                @json(session('swal.text'))
+            ).set({
+                transition: 'zoom',
+                movable: false,
+                closable: true,
+                label: 'OK'
             });
         </script>
     @endif
@@ -108,4 +111,3 @@
         }
     </script>
 @endpush
-

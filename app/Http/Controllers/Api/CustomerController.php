@@ -40,218 +40,196 @@ class CustomerController extends Controller
             ], 500);
         }
     }
-public function register(Request $request)
-{
-    return $this->safeExecute(function () use ($request) {
+    public function register(Request $request)
+    {
+        return $this->safeExecute(function () use ($request) {
 
-        // ---------------------------------------
-        // OTP SWITCH (TURN ON/OFF FROM HERE)
-        // ---------------------------------------
-        $ENABLE_OTP = false;   // true = send real OTP, false = disable OTP
-        // ---------------------------------------
+            $ENABLE_OTP = false;
 
-        // Validate inputs
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
-            'phone'      => 'required|digits:10|numeric',
-            'loan_type'  => 'required|string|in:business,personal',
-            'ref'        => 'nullable|string'
-        ]);
-
-        if (User::where('phone', $validated['phone'])->exists()) {
-            return response()->json([
-                'status'       => 'success',
-                'message'      => 'Customer already registered.',
-                'next_action'  => 'login',
+            $validated = $request->validate([
+                'name'       => 'required|string|max:255',
+                'phone'      => 'required|digits:10|numeric',
+                'loan_type'  => 'required|string|in:business,personal',
+                'ref'        => 'nullable|string'
             ]);
-        }
 
-        // Detect device, OS, browser
-        $userAgent = $request->header('User-Agent');
-        $ip        = $request->ip();
+            if (User::where('phone', $validated['phone'])->exists()) {
+                return response()->json([
+                    'status'       => 'success',
+                    'message'      => 'Customer already registered.',
+                    'next_action'  => 'login',
+                ]);
+            }
 
-        $browser = match (true) {
-            str_contains($userAgent, 'Chrome')  => 'Chrome',
-            str_contains($userAgent, 'Firefox') => 'Firefox',
-            str_contains($userAgent, 'Safari')  => 'Safari',
-            str_contains($userAgent, 'MSIE'),
-            str_contains($userAgent, 'Trident') => 'Internet Explorer',
-            default                              => 'Unknown',
-        };
+            // Detect device, OS, browser
+            $userAgent = $request->header('User-Agent');
+            $ip        = $request->ip();
 
-        $os = match (true) {
-            str_contains($userAgent, 'Windows') => 'Windows',
-            str_contains($userAgent, 'Mac')     => 'Mac OS',
-            str_contains($userAgent, 'Linux')   => 'Linux',
-            str_contains($userAgent, 'Android') => 'Android',
-            str_contains($userAgent, 'iPhone')  => 'iOS',
-            default                              => 'Unknown',
-        };
+            $browser = match (true) {
+                str_contains($userAgent, 'Chrome')  => 'Chrome',
+                str_contains($userAgent, 'Firefox') => 'Firefox',
+                str_contains($userAgent, 'Safari')  => 'Safari',
+                str_contains($userAgent, 'MSIE'),
+                str_contains($userAgent, 'Trident') => 'Internet Explorer',
+                default                              => 'Unknown',
+            };
 
-        $device = preg_match('/Mobile|Android|iPhone|iPad|Tablet/i', $userAgent)
-            ? 'Mobile'
-            : 'Desktop';
+            $os = match (true) {
+                str_contains($userAgent, 'Windows') => 'Windows',
+                str_contains($userAgent, 'Mac')     => 'Mac OS',
+                str_contains($userAgent, 'Linux')   => 'Linux',
+                str_contains($userAgent, 'Android') => 'Android',
+                str_contains($userAgent, 'iPhone')  => 'iOS',
+                default                              => 'Unknown',
+            };
 
-        // Referral
-        $ref       = $validated['ref'] ?? null;
-        $validRef  = $ref ? User::where('referral_code', $ref)->first() : null;
+            $device = preg_match('/Mobile|Android|iPhone|iPad|Tablet/i', $userAgent)
+                ? 'Mobile'
+                : 'Desktop';
 
-        // Customer check
-        $customer = Customer::where('phone', $validated['phone'])->first();
+            // Referral
+            $ref       = $validated['ref'] ?? null;
+            $validRef  = $ref ? User::where('referral_code', $ref)->first() : null;
 
-        $commonUpdates = [
-            'name'        => $validated['name'],
-            'loan_type'   => $validated['loan_type'],
-            'ip_address'  => $ip,
-            'browser'     => $browser,
-            'os'          => $os,
-            'device_type' => $device,
-        ];
+            // Customer check
+            $customer = Customer::where('phone', $validated['phone'])->first();
 
-        if ($validRef) {
-            $commonUpdates['referred_by'] = $ref;
-        }
+            $commonUpdates = [
+                'name'        => $validated['name'],
+                'loan_type'   => $validated['loan_type'],
+                'ip_address'  => $ip,
+                'browser'     => $browser,
+                'os'          => $os,
+                'device_type' => $device,
+            ];
 
-        // ---------------------------------------
-        // EXISTING CUSTOMER
-        // ---------------------------------------
-        if ($customer) {
+            if ($validRef) {
+                $commonUpdates['referred_by'] = $ref;
+            }
 
-            if ($customer->is_otp_verify) {
+            if ($customer) {
 
-                $customer->update($commonUpdates);
+                if ($customer->is_otp_verify) {
+
+                    $customer->update($commonUpdates);
+
+                    return response()->json([
+                        'status'       => 'success',
+                        'message'      => 'Customer already verified.',
+                        'next_action'  => 'get_customer_mail',
+                        'id'           => $customer->id,
+                    ]);
+                }
+
+                $otpResponse = $ENABLE_OTP
+                    ? OtpHelper::sendOtp($validated['phone'])
+                    : ['Details' => 'OTP_DISABLED'];
+
+                $customer->update(array_merge($commonUpdates, [
+                    'otp_session' => $otpResponse['Details'],
+                ]));
 
                 return response()->json([
                     'status'       => 'success',
-                    'message'      => 'Customer already verified.',
-                    'next_action'  => 'get_customer_mail',
+                    'message'      => $ENABLE_OTP ? 'OTP sent successfully.' : 'OTP disabled. Dummy session used.',
+                    'next_action'  => 'verify_otp',
                     'id'           => $customer->id,
                 ]);
             }
 
-            // SEND OTP ONLY IF ENABLED
             $otpResponse = $ENABLE_OTP
                 ? OtpHelper::sendOtp($validated['phone'])
                 : ['Details' => 'OTP_DISABLED'];
 
-            $customer->update(array_merge($commonUpdates, [
+            $newCustomer = Customer::create(array_merge($commonUpdates, [
+                'phone'       => $validated['phone'],
                 'otp_session' => $otpResponse['Details'],
             ]));
 
             return response()->json([
                 'status'       => 'success',
-                'message'      => $ENABLE_OTP ? 'OTP sent successfully.' : 'OTP disabled. Dummy session used.',
+                'message'      => $ENABLE_OTP ? 'Customer registered successfully.' : 'Customer registered (OTP disabled).',
                 'next_action'  => 'verify_otp',
-                'id'           => $customer->id,
-            ]);
-        }
+                'id'           => $newCustomer->id,
+            ], 201);
+        });
+    }
 
-        // ---------------------------------------
-        // NEW CUSTOMER
-        // ---------------------------------------
-        $otpResponse = $ENABLE_OTP
-            ? OtpHelper::sendOtp($validated['phone'])
-            : ['Details' => 'OTP_DISABLED'];
+    public function resendOtp(Request $request, $id)
+    {
+        return $this->safeExecute(function () use ($request, $id) {
 
-        $newCustomer = Customer::create(array_merge($commonUpdates, [
-            'phone'       => $validated['phone'],
-            'otp_session' => $otpResponse['Details'],
-        ]));
+            $ENABLE_OTP = false;
 
-        return response()->json([
-            'status'       => 'success',
-            'message'      => $ENABLE_OTP ? 'Customer registered successfully.' : 'Customer registered (OTP disabled).',
-            'next_action'  => 'verify_otp',
-            'id'           => $newCustomer->id,
-        ], 201);
+            $customer = Customer::findOrFail($id);
 
-    });
-}
+            if ($customer->is_otp_verify) {
+                return response()->json([
+                    'status'      => 'success',
+                    'message'     => 'Customer already verified.',
+                    'next_action' => 'get_customer_mail',
+                    'id'          => $customer->id,
+                ]);
+            }
 
-public function resendOtp(Request $request, $id)
-{
-    return $this->safeExecute(function () use ($request, $id) {
+            $otpResponse = $ENABLE_OTP
+                ? OtpHelper::sendOtp($customer->phone)
+                : ['Details' => 'OTP_DISABLED'];
 
-        // Same switch as register()
-        $ENABLE_OTP = false;  // or false
+            $customer->otp_session = $otpResponse['Details'];
+            $customer->save();
 
-        $customer = Customer::findOrFail($id);
-
-        // If already verified → no need to resend OTP
-        if ($customer->is_otp_verify) {
             return response()->json([
                 'status'      => 'success',
-                'message'     => 'Customer already verified.',
-                'next_action' => 'get_customer_mail',
+                'message'     => $ENABLE_OTP ? 'OTP resent successfully.' : 'OTP disabled. Dummy session used.',
+                'next_action' => 'verify_otp',
                 'id'          => $customer->id,
             ]);
-        }
+        });
+    }
 
-        // Send or disable OTP
-        $otpResponse = $ENABLE_OTP
-            ? OtpHelper::sendOtp($customer->phone)
-            : ['Details' => 'OTP_DISABLED'];
+    public function otpVerify(Request $request, $id)
+    {
+        return $this->safeExecute(function () use ($request, $id) {
 
-        // Update session
-        $customer->otp_session = $otpResponse['Details'];
-        $customer->save();
-
-        return response()->json([
-            'status'      => 'success',
-            'message'     => $ENABLE_OTP ? 'OTP resent successfully.' : 'OTP disabled. Dummy session used.',
-            'next_action' => 'verify_otp',
-            'id'          => $customer->id,
-        ]);
-    });
-}
-
-
-
-public function otpVerify(Request $request, $id)
-{
-    return $this->safeExecute(function () use ($request, $id) {
-        
-        $validated = $request->validate([
-            'otp' => 'required|numeric',
-        ]);
-
-        $customer = Customer::findOrFail($id);
-
-        // Allow master OTP
-        if ($validated['otp'] == 123456) {
-            $customer->is_otp_verify = 1;
-            $customer->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'OTP verified successfully.',
-                'next_action' => 'get_customer_mail',
-                'id' => $customer->id,
-            ], 200);
-        }
-
-        // Normal verification via 2Factor
-        $verifyResponse = OtpHelper::verifyOtp($customer->otp_session, $validated['otp']);
-
-        if (!empty($verifyResponse['Status']) && $verifyResponse['Status'] == "Success") {
-            $customer->is_otp_verify = 1;
-            $customer->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'OTP verified successfully.',
-                'next_action' => 'get_customer_mail',
-                'id' => $customer->id,
+            $validated = $request->validate([
+                'otp' => 'required|numeric',
             ]);
-        }
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Invalid OTP!',
-        ], 400);
-    });
-}
+            $customer = Customer::findOrFail($id);
 
+            if ($validated['otp'] == 123456) {
+                $customer->is_otp_verify = 1;
+                $customer->save();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'OTP verified successfully.',
+                    'next_action' => 'get_customer_mail',
+                    'id' => $customer->id,
+                ], 200);
+            }
+
+            $verifyResponse = OtpHelper::verifyOtp($customer->otp_session, $validated['otp']);
+
+            if (!empty($verifyResponse['Status']) && $verifyResponse['Status'] == "Success") {
+                $customer->is_otp_verify = 1;
+                $customer->save();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'OTP verified successfully.',
+                    'next_action' => 'get_customer_mail',
+                    'id' => $customer->id,
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid OTP!',
+            ], 400);
+        });
+    }
 
     public function storeCustomerMail(Request $request, $id)
     {

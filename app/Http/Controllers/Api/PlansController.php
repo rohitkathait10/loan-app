@@ -34,10 +34,9 @@ class PlansController extends Controller
      */
     private function sendPlanResponse($type)
     {
-        // Fetch from DB instead of config
         $plans = Plan::where('plan_type', $type)
-                    ->orderBy('months', 'ASC')
-                    ->get(['id', 'plan_type', 'months', 'price', 'original_price', 'description']);
+            ->orderBy('months', 'ASC')
+            ->get(['id', 'plan_type', 'months', 'price', 'original_price', 'description']);
 
         if ($plans->isEmpty()) {
 

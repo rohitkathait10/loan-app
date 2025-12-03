@@ -21,9 +21,10 @@
         <div class="row">
             @php
                 $cards = [
-                    ['title' => 'Total Leads', 'count' => $customer, 'icon' => 'fas fa-user'],
                     ['title' => 'Total Customers', 'count' => $user, 'icon' => 'fas fa-briefcase'],
-                    ['title' => 'Total Active Loans', 'count' => 0, 'icon' => 'fas fa-briefcase'],
+                    ['title' => 'Total Leads', 'count' => $customer, 'icon' => 'fas fa-user'],
+                    ['title' => 'Total Enquiries', 'count' => $enquiry, 'icon' => 'fas fa-user'],
+                    // ['title' => 'Total Active Loans', 'count' => 0, 'icon' => 'fas fa-briefcase'],
                     ['title' => 'New Applications Today/This Week', 'count' => 0, 'icon' => 'fas fa-briefcase'],
                     ['title' => 'Overdue Loans Count', 'count' => 0, 'icon' => 'fas fa-briefcase'],
                     ['title' => 'Total Amount Disbursed / Collected', 'count' => 0, 'icon' => 'fas fa-briefcase'],

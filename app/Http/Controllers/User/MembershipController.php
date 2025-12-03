@@ -93,23 +93,23 @@ class MembershipController extends Controller
             'total' => $user->card_price,
             'payment' => [
                 'method' => 'Online Payment',
-                'id' => $order->razorpay_order_id
+                // 'id' => $order->razorpay_order_id
             ],
             'note' => "Payment is refundable only in accordance with the company's Return & Refund Policy.",
             'authorized_person' => 'Kredifyloans Corporate'
         ];
 
         $pdf = Pdf::loadView('user.invoice', $invoiceData)
-            ->setPaper('a4', 'portrait')
-            ->setOptions([
-                'defaultFont' => 'Arial',
-                'isRemoteEnabled' => true,
-                'isHtml5ParserEnabled' => true,
-                'margin_top' => 10,
-                'margin_right' => 10,
-                'margin_bottom' => 10,
-                'margin_left' => 10
-            ]);
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'defaultFont' => 'DejaVu Sans',
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+            'margin_top' => 10,
+            'margin_right' => 10,
+            'margin_bottom' => 10,
+            'margin_left' => 10
+        ]);
 
         return $pdf->download('invoice-' . $invoiceData['invoice']['number'] . '.pdf');
     }
