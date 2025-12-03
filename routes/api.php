@@ -21,6 +21,8 @@ use App\Http\Controllers\Api\PlansController;
 Route::get('/plans/personal', [PlansController::class, 'fetchPersonalPlan'])->name('fetch.plan');
 Route::get('/plans/business', [PlansController::class, 'fetchBusinessPlan'])->name('fetch.plan');
 
+Route::post('/resend-otp/{id}', [CustomerController::class, 'resendOtp']);
+
 // Personal Loan Application Flow
 
 Route::post('/personal-loan', [CustomerController::class, 'register'])->name('personal.loan.store');

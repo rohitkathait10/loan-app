@@ -45,9 +45,13 @@
                                             <td>{{ $order->customer->name }}</td>
                                             <td>{{ $order->amount }}</td>
                                             <td>{{ $order->utr }}</td>
-                                            <td>
-                                                <img src="{{ asset('storage/' . $order->payment_screenshot) }}"
-                                                    alt="payment_screenshot" width="120">
+                                           <td>
+                                                @if(!empty($order->payment_screenshot))
+                                                    <img src="{{ asset('storage/' . $order->payment_screenshot) }}" 
+                                                         alt="payment_screenshot" width="120">
+                                                @else
+                                                    not uploaded
+                                                @endif
                                             </td>
 
                                             <td>{{ $order->status }}</td>

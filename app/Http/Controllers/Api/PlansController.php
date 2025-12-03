@@ -15,11 +15,6 @@ class PlansController extends Controller
     {
         $response = $this->sendPlanResponse('personal');
 
-        // Log the returned response
-        Log::info('Personal Plan Response:', [
-            'response' => $response->getData(true)
-        ]);
-
         return $response;
     }
 
@@ -28,14 +23,8 @@ class PlansController extends Controller
      */
     public function fetchBusinessPlan()
     {
-        Log::info('Business plan fetch request received.');
 
         $response = $this->sendPlanResponse('business');
-
-        // Log the response
-        Log::info('Business Plan Response:', [
-            'response' => $response->getData(true)
-        ]);
 
         return $response;
     }
@@ -51,18 +40,12 @@ class PlansController extends Controller
                     ->get(['id', 'plan_type', 'months', 'price', 'original_price', 'description']);
 
         if ($plans->isEmpty()) {
-            Log::warning("No plans found for type: $type");
 
             return response()->json([
                 'status' => false,
                 'message' => 'No plans found.',
             ], 404);
         }
-
-        Log::info("Plans fetched successfully", [
-            'plan_type' => $type,
-            'count' => $plans->count()
-        ]);
 
         return response()->json([
             'status' => true,

@@ -48,6 +48,7 @@ class User extends Authenticatable
         'membership_end',
         'otp',
         'otp_expires_at',
+        'otp_session',
         'ip_address',
         'os',
         'browser',
