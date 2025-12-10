@@ -36,6 +36,9 @@ class Customer extends Model
         'browser',
         'os',
         'device_type',
+        'terms_accepted',
+        'marketing_consent',
+        'consent_given_at',
     ];
 
     protected $casts = [

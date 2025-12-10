@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use App\Models\User;
+use App\Helpers\OtpHelper;
 
 class PasswordResetLinkController extends Controller
 {
@@ -27,29 +28,32 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'phone' => ['required', 'digits:10', 'exists:users,phone'],
         ]);
-
+    
         $user = User::where('phone', $request->phone)->first();
-
+    
         if (!$user) {
             return back()->withErrors(['phone' => 'Mobile number not found.']);
         }
-
-        $otp = rand(1000, 9999);
-
+    
+        $otpResponse = OtpHelper::sendOtp($user->phone, 'Reset_Password_OTP');
+    
+        if (!isset($otpResponse['Status']) || $otpResponse['Status'] !== "Success") {
+            return back()->withErrors(['phone' => 'Failed to send OTP. Please try again later.']);
+        }
+    
+        $otpSessionId = $otpResponse['Details'];
+    
         $user->update([
-            'otp' => $otp,
-            'otp_expires_at' => now()->addMinutes(5),
+            'otp_session' => $otpSessionId,
         ]);
-
-        // Later you will send the OTP here using SMS API
-        // SmsService::send($user->phone, "Your OTP is: $otp");
-
-        // Store phone in session for next step
+    
         Session::put('reset_phone', $user->phone);
-
+        Session::put('otp_session_id', $otpSessionId);
+    
         return redirect()->route('password.verifyOtp')
             ->with('status', 'OTP sent to your mobile number.');
     }
+
 
     public function showOtpForm()
     {
@@ -63,77 +67,70 @@ class PasswordResetLinkController extends Controller
     public function resendOtp()
     {
         $phone = Session::get('reset_phone');
-
+    
         if (!$phone) {
             return redirect()->route('password.request')
                 ->withErrors(['phone' => 'Session expired, please enter your phone again.']);
         }
-
+    
         $user = User::where('phone', $phone)->first();
-
+    
         if (!$user) {
             return redirect()->route('password.request')
                 ->withErrors(['phone' => 'User not found.']);
         }
-
-        $otp = rand(1000, 9999);
-
+    
+        $otpResponse = OtpHelper::sendOtp($user->phone, 'Reset_Password_OTP');
+    
+        if (!isset($otpResponse['Status']) || $otpResponse['Status'] !== "Success") {
+            return back()->withErrors(['phone' => 'Failed to resend OTP. Please try again later.']);
+        }
+    
+        $otpSessionId = $otpResponse['Details'];
+    
         $user->update([
-            'otp' => $otp,
-            'otp_expires_at' => now()->addMinutes(5),
+            'otp_session' => $otpSessionId,
         ]);
-
-        // TODO: Send OTP SMS here later
-        // SmsService::send($user->phone, "Your new OTP is: $otp");
-
+    
+        Session::put('otp_session_id', $otpSessionId);
+    
         return redirect()->route('password.verifyOtp')
             ->with('status', 'A new OTP has been sent to your mobile number.');
     }
 
+
     public function verifyOtp(Request $request)
     {
         $request->validate([
-            'otp' => ['required', 'digits:4'],
+            'otp' => ['required', 'digits:6'],
         ]);
-
+    
         $phone = Session::get('reset_phone');
-
-        if (!$phone) {
+        $sessionId = Session::get('otp_session_id'); 
+    
+        if (!$phone || !$sessionId) {
             return redirect()->route('password.request')
                 ->withErrors(['phone' => 'Session expired. Please try again.']);
         }
-
+    
         $user = User::where('phone', $phone)->first();
-
+    
         if (!$user) {
             return redirect()->route('password.request')
                 ->withErrors(['phone' => 'User not found.']);
         }
+    
+    
+        $verifyResponse = OtpHelper::verifyOtp($sessionId, $request->otp);
 
-        if ($request->otp !== '1234') {
-        
-            if ($user->otp != $request->otp) {
-                return back()->withErrors(['otp' => 'Invalid OTP, please try again.']);
-            }
-        
-            if ($user->otp_expires_at == null || now()->greaterThan($user->otp_expires_at)) {
-                return back()->withErrors(['otp' => 'OTP has expired, please request a new one.']);
-            }
-        
+        if (!isset($verifyResponse['Status']) || $verifyResponse['Status'] !== "Success") {
+            return back()->withErrors(['otp' => 'Invalid or expired OTP. Please try again.']);
         }
-
-        if ($user->otp_expires_at == null || now()->greaterThan($user->otp_expires_at)) {
-            return back()->withErrors(['otp' => 'OTP has expired, please request a new one.']);
-        }
-
-        $user->update([
-            'otp' => null,
-            'otp_expires_at' => null,
-        ]);
-
+    
         Session::put('allow_password_reset', true);
-
+    
         return redirect()->route('password.reset')
             ->with('status', 'OTP Verified. You can now set a new password.');
     }
+
 }

@@ -53,11 +53,16 @@ class MembershipController extends Controller
                 'invoice_number' => $invoiceNumber,
                 'payment_id' => $paymentId,
                 'card_number' => $generatedCardNumber,
-                'amount' => 499,
+                'amount' => $user->card_price,
             ]);
         }
 
         $order = Order::where('user_id', $user->id)->latest()->first();
+        
+        $finalAmount = $user->card_price; 
+        $baseAmount  = $user->base_price;
+        $gstAmount   = round($finalAmount - $baseAmount, 2);
+
 
         $invoiceData = [
             'company' => [
@@ -87,7 +92,10 @@ class MembershipController extends Controller
                     'description' => 'Membership Card',
                     'card_number' => $user->membership_card_number,
                     'quantity' => 1,
-                    'amount' => $user->card_price
+                    'base_amount' => $baseAmount,
+                    'gst_amount' => $gstAmount,
+                    'gst_percent' => 18,
+                    'final_amount' => $finalAmount,
                 ]
             ],
             'total' => $user->card_price,

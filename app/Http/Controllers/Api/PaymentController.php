@@ -53,6 +53,11 @@ class PaymentController extends Controller
         if (!file_exists($customerDir)) {
             mkdir($customerDir, 0777, true);
         }
+        
+        $baseAmount = $selectedPlan->price;
+        $gst = round($baseAmount * 0.18, 2);
+        $amount = round($baseAmount + $gst, 2);
+
 
         if ($prevOrder) {
 
@@ -65,25 +70,26 @@ class PaymentController extends Controller
 
             if ($prevOrder->plan_id == $selectedPlan->id) {
                 return response()->json([
-                    "success"     => true,
-                    "message"     => "Unpaid order already exists.",
-                    "order_id"    => $prevOrder->id,
-                    "customer_id" => $prevOrder->customer_id,
-                    "amount"      => $prevOrder->amount,
-                    "plan"        => [
-                        'id'     => $prevOrder->plan_id,
-                        'months' => $prevOrder->plan->months ?? null,
-                        'price'  => $prevOrder->amount
+                    "success"       => true,
+                    "message"       => "Unpaid order already exists.",
+                    "order_id"      => $prevOrder->id,
+                    "customer_id"   => $prevOrder->customer_id,
+                    "base_amount"   => $baseAmount,
+                    "gst"           => $gst,
+                    "final_amount"  => $amount,
+                    "plan"          => [
+                        'id'        => $prevOrder->plan_id,
+                        'months'    => $prevOrder->plan->months ?? null,
+                        'price'     => $prevOrder->amount
                     ],
-                    "qr_url"      => $prevOrder->qr_url ?? null,
-                    "upi_link"    => $prevOrder->upi_link
+                    "qr_url"        => $prevOrder->qr_url ?? null,
+                    "upi_link"      => $prevOrder->upi_link
                 ]);
             }
 
             DB::beginTransaction();
             try {
 
-                $amount = $selectedPlan->price;
                 $upiId  = "Q766305794@ybl";
                 $orderIdentifier = "UPI_" . uniqid();
                 $upiString = "upi://pay?pa={$upiId}&pn=KredifyLoans&am={$amount}&cu=INR&tn={$orderIdentifier}";
@@ -103,6 +109,7 @@ class PaymentController extends Controller
                 $prevOrder->cashfree_order_id = $orderIdentifier;
                 $prevOrder->plan_id = $selectedPlan->id;
                 $prevOrder->amount = $amount;
+                $prevOrder->base_price = $baseAmount;
                 $prevOrder->currency = 'INR';
                 $prevOrder->status = 'created';
                 $prevOrder->upi_link = $upiString;
@@ -112,14 +119,16 @@ class PaymentController extends Controller
                 DB::commit();
 
                 return response()->json([
-                    "success"     => true,
-                    "message"     => "Existing unpaid order updated to the new plan.",
-                    "order_id"    => $prevOrder->id,
-                    "customer_id" => $prevOrder->customer_id,
-                    "amount"      => $prevOrder->amount,
-                    "plan"        => $selectedPlan->only(['id', 'months', 'price']),
-                    "qr_url"      => $qrUrl,
-                    "upi_link"    => $upiString
+                    "success"       => true,
+                    "message"       => "Existing unpaid order updated to the new plan.",
+                    "order_id"      => $prevOrder->id,
+                    "customer_id"   => $prevOrder->customer_id,
+                    "base_amount"   => $baseAmount,
+                    "gst"           => $gst,
+                    "final_amount"  => $amount,
+                    "plan"          => $selectedPlan->only(['id', 'months', 'price']),
+                    "qr_url"        => $qrUrl,
+                    "upi_link"      => $upiString
                 ]);
             } catch (\Throwable $e) {
                 DB::rollBack();
@@ -133,7 +142,6 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
 
-            $amount = $selectedPlan->price;
             $upiId  = "Q766305794@ybl";
             $orderIdentifier = "UPI_" . uniqid();
             $upiString = "upi://pay?pa={$upiId}&pn=KredifyLoans&am={$amount}&cu=INR&tn={$orderIdentifier}";
@@ -155,6 +163,7 @@ class PaymentController extends Controller
                 'customer_id'       => $customer->id,
                 'plan_id'           => $selectedPlan->id,
                 'amount'            => $amount,
+                'base_price'        => $baseAmount,
                 'currency'          => 'INR',
                 'status'            => 'created',
                 'upi_link'          => $upiString,
@@ -164,14 +173,16 @@ class PaymentController extends Controller
             DB::commit();
 
             return response()->json([
-                "success"     => true,
-                "message"     => "Order created successfully.",
-                "order_id"    => $order->id,
-                "customer_id" => $order->customer_id,
-                "amount"      => $amount,
-                "plan"        => $selectedPlan->only(['id', 'months', 'price']),
-                "qr_url"      => $qrUrl,
-                "upi_link"    => $upiString
+                "success"       => true,
+                "message"       => "Order created successfully.",
+                "order_id"      => $order->id,
+                "customer_id"   => $order->customer_id,
+                "base_amount"   => $baseAmount,
+                "gst"           => $gst,
+                "final_amount"  => $amount,
+                "plan"          => $selectedPlan->only(['id', 'months', 'price']),
+                "qr_url"        => $qrUrl,
+                "upi_link"      => $upiString
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -206,9 +217,9 @@ class PaymentController extends Controller
         $order->payment_screenshot = $screenshotPath;
         $order->save();
 
-        $customer = Customer::findOrFail($request->customer_id);
-        $customer->status = 1;
-        $customer->save();
+        // $customer = Customer::findOrFail($request->customer_id);
+        // $customer->status = 1;
+        // $customer->save();
 
         return response()->json([
             'message' => 'Payment submitted successfully.',

@@ -42,6 +42,7 @@ class User extends Authenticatable
         'wallet_balance',
         'membership_card_number',
         'card_price',
+        'base_price',
         'membership_tier',
         'membership_status',
         'membership_start',
@@ -54,6 +55,9 @@ class User extends Authenticatable
         'browser',
         'device_type',
         'email_verified_at',
+        'terms_accepted',
+        'marketing_consent',
+        'consent_given_at',
     ];
 
     /**

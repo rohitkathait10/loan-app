@@ -44,13 +44,16 @@ class CustomerController extends Controller
     {
         return $this->safeExecute(function () use ($request) {
 
-            $ENABLE_OTP = false;
+            $ENABLE_OTP = true;
 
             $validated = $request->validate([
-                'name'       => 'required|string|max:255',
-                'phone'      => 'required|digits:10|numeric',
-                'loan_type'  => 'required|string|in:business,personal',
-                'ref'        => 'nullable|string'
+                'name'              => 'required|string|max:255',
+                'phone'             => 'required|digits:10|numeric',
+                'loan_type'         => 'required|string|in:business,personal',
+                'ref'               => 'nullable|string',
+                
+                'terms_accepted'    => 'required|accepted',
+                'marketing_consent' => 'required|accepted', 
             ]);
 
             if (User::where('phone', $validated['phone'])->exists()) {
@@ -106,6 +109,8 @@ class CustomerController extends Controller
             if ($validRef) {
                 $commonUpdates['referred_by'] = $ref;
             }
+            
+            $template = "Phone_Verification_OTP";
 
             if ($customer) {
 
@@ -122,7 +127,7 @@ class CustomerController extends Controller
                 }
 
                 $otpResponse = $ENABLE_OTP
-                    ? OtpHelper::sendOtp($validated['phone'])
+                    ? OtpHelper::sendOtp($validated['phone'], $template)
                     : ['Details' => 'OTP_DISABLED'];
 
                 $customer->update(array_merge($commonUpdates, [
@@ -136,14 +141,17 @@ class CustomerController extends Controller
                     'id'           => $customer->id,
                 ]);
             }
-
+                
             $otpResponse = $ENABLE_OTP
-                ? OtpHelper::sendOtp($validated['phone'])
+                ? OtpHelper::sendOtp($validated['phone'], $template)
                 : ['Details' => 'OTP_DISABLED'];
 
             $newCustomer = Customer::create(array_merge($commonUpdates, [
                 'phone'       => $validated['phone'],
                 'otp_session' => $otpResponse['Details'],
+                'terms_accepted'     => 1,
+                'marketing_consent'  => 1,
+                'consent_given_at'   => now(),  
             ]));
 
             return response()->json([
@@ -159,7 +167,7 @@ class CustomerController extends Controller
     {
         return $this->safeExecute(function () use ($request, $id) {
 
-            $ENABLE_OTP = false;
+            $ENABLE_OTP = true;
 
             $customer = Customer::findOrFail($id);
 
@@ -198,17 +206,17 @@ class CustomerController extends Controller
 
             $customer = Customer::findOrFail($id);
 
-            if ($validated['otp'] == 123456) {
-                $customer->is_otp_verify = 1;
-                $customer->save();
+            // if ($validated['otp'] == 123456) {
+            //     $customer->is_otp_verify = 1;
+            //     $customer->save();
 
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'OTP verified successfully.',
-                    'next_action' => 'get_customer_mail',
-                    'id' => $customer->id,
-                ], 200);
-            }
+            //     return response()->json([
+            //         'status' => 'success',
+            //         'message' => 'OTP verified successfully.',
+            //         'next_action' => 'get_customer_mail',
+            //         'id' => $customer->id,
+            //     ], 200);
+            // }
 
             $verifyResponse = OtpHelper::verifyOtp($customer->otp_session, $validated['otp']);
 

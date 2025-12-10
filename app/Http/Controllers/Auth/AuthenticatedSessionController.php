@@ -17,6 +17,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
+        if (request()->message === 'already_register') {
+            session()->flash('swal.title', 'Already Registered');
+            session()->flash('swal.text', 'You are already registered, please login here.');
+        }
+    
         return view('auth.login');
     }
 

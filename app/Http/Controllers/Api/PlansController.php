@@ -37,15 +37,37 @@ class PlansController extends Controller
         $plans = Plan::where('plan_type', $type)
             ->orderBy('months', 'ASC')
             ->get(['id', 'plan_type', 'months', 'price', 'original_price', 'description']);
-
+    
         if ($plans->isEmpty()) {
-
+    
             return response()->json([
                 'status' => false,
                 'message' => 'No plans found.',
             ], 404);
         }
-
+    
+        $plans = $plans->map(function ($plan) {
+    
+            $price = floatval($plan->price);
+    
+            $gstPercent = 18;
+            $gstAmount = round($price * ($gstPercent / 100), 2);
+            $finalAmount = round($price + $gstAmount, 2);
+    
+            return [
+                'id' => $plan->id,
+                'plan_type' => $plan->plan_type,
+                'months' => $plan->months,
+                'price' => number_format($price, 2),
+                'original_price' => number_format(floatval($plan->original_price), 2),
+                'description' => $plan->description,
+    
+                'gst_percent' => $gstPercent,
+                'gst_amount' => number_format($gstAmount, 2),
+                'final_amount' => number_format($finalAmount, 2),
+            ];
+        });
+    
         return response()->json([
             'status' => true,
             'message' => ucfirst($type) . " plans fetched successfully.",
@@ -55,4 +77,5 @@ class PlansController extends Controller
             ]
         ], 200);
     }
+
 }

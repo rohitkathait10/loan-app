@@ -12,7 +12,7 @@ class Order extends Model
     protected $table = 'orders';
 
      protected $fillable = [
-        'cashfree_order_id', 'customer_id', 'user_id','amount', 'currency',
+        'cashfree_order_id', 'customer_id', 'user_id','amount', 'base_price', 'currency',
         'status', 'payment_id', 'signature','utr','payment_screenshot','plan_id','upi_link','qr_url'
     ];
 

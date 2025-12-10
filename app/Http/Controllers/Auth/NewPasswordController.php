@@ -59,6 +59,7 @@ class NewPasswordController extends Controller
 
         Session::forget('reset_phone');
         Session::forget('allow_password_reset');
+        Session::forget('otp_session_id');
 
         return redirect()->route('login')->with('status', 'Password reset successfully. Please login.');
     }

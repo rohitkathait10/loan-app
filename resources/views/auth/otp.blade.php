@@ -30,7 +30,7 @@
                                     <label class="form-label">Enter OTP</label>
                                     <input type="text" name="otp"
                                         class="form-control @error('otp') is-invalid @enderror" required
-                                        placeholder="4-digit OTP">
+                                        placeholder="6-digit OTP">
 
                                     @error('otp')
                                         <span class="text-danger small">{{ $message }}</span>
@@ -53,4 +53,20 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const otpInput = document.querySelector("input[name='otp']");
+        
+            otpInput.addEventListener("input", function () {
+        
+                this.value = this.value.replace(/\D/g, '');
+        
+                if (this.value.length > 6) {
+                    this.value = this.value.slice(0, 6);
+                }
+            });
+        });
+    </script>
+
 @endsection

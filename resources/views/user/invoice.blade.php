@@ -143,7 +143,7 @@
         }
 
         .text-right {
-            text-align: right;
+            text-align: right !important;
         }
 
         .total-row {
@@ -211,9 +211,15 @@
             font-style: italic;
         }
 
-      .rupee {
+        .rupee {
             font-family: 'DejaVu Sans', sans-serif !important;
         }
+        
+        .items-table td:first-child {
+            padding-right: 10px;
+            width: 55%;
+        }
+
 
     </style>
 </head>
@@ -264,9 +270,9 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th style="width: 70%;">Item</th>
+                    <th style="width: 55%;">Item</th>
                     <th class="text-center" style="width: 10%;">Qty</th>
-                    <th class="text-right" style="width: 20%;">Amount (<span class="rupee">₹</span>)</th>
+                    <th class="text-right" style="width: 35%;">Amount (<span class="rupee">₹</span>)</th>
                 </tr>
             </thead>
             <tbody>
@@ -277,7 +283,12 @@
                             <div class="card-number">Card Number - {{ $item['card_number'] }}</div>
                         </td>
                         <td class="text-center">{{ $item['quantity'] }}</td>
-                        <td class="text-right">{{ number_format($item['amount'], 2) }}</td>
+                        <td class="text-right">
+                            <div>Base:<span class="rupee">&#8377;</span>{{ number_format($item['base_amount'], 2) }}</div>
+                            <div>GST (18%): <span class="rupee">&#8377;</span>{{ number_format($item['gst_amount'], 2) }}</div>
+                            <div><strong>Final Amount: <span class="rupee">&#8377;</span>{{ number_format($item['final_amount'], 2) }}</strong></div>
+                        </td>
+
                     </tr>
                 @endforeach
                 <tr class="total-row">
