@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Enquiry;
+use PragmaRX\Google2FA\Google2FA;
 
 class AdminController extends Controller
 {
@@ -26,14 +27,23 @@ class AdminController extends Controller
 
         if (Auth::attempt(['phone' => $request->phone, 'password' => $request->password])) {
 
-            if (Auth::user()->role != 1) {
-                Auth::logout();
+            $user = Auth::user();
 
+            if ($user->role != 1) {
+                Auth::logout();
                 throw ValidationException::withMessages([
                     'phone' => ['Access denied. Not authorized as admin.'],
                 ]);
             }
 
+            if ($user->google2fa_enabled) {
+
+                session(['2fa_admin_id' => $user->id]);
+
+                Auth::logout();
+
+                return redirect()->route('admin.2fa.login');
+            }
             $request->session()->regenerate();
 
             return redirect()->route('admin.dashboard');
@@ -53,7 +63,6 @@ class AdminController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->away('https://kredifyloans.com/');
-
     }
 
     public function dashboard()

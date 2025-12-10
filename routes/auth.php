@@ -7,15 +7,18 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('redirect')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('login', [AdminController::class, 'showLoginForm'])->name('login');
         Route::post('login', [AdminController::class, 'login']);
+
+        Route::get('login/otp', [AdminAuthController::class, 'show2faLogin'])->name('2fa.login');
+        Route::post('login/otp', [AdminAuthController::class, 'verify2faLogin'])->name('2fa.check');
     });
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
@@ -68,5 +71,4 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('logout', [AdminController::class, 'logout'])->name('logout');
     });
-
 });

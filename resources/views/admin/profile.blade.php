@@ -107,6 +107,60 @@
                         </div>
                     </div>
                 </div>
+                <!-- Google 2FA Setup -->
+            <div class="card card-round mt-4">
+    <div class="card-body">
+
+        <h4 class="mb-3">Two-Factor Authentication (2FA)</h4>
+
+        @if (auth()->user()->google2fa_enabled)
+            <p class="text-success"><strong>Status:</strong> Enabled</p>
+
+            <form action="{{ route('admin.2fa.disable') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-danger">
+                    Disable 2FA
+                </button>
+            </form>
+
+        @else
+            <p class="text-danger"><strong>Status:</strong> Not Enabled</p>
+
+            <form action="{{ route('admin.2fa.generate') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-primary">
+                    Enable 2FA
+                </button>
+            </form>
+
+            {{-- Only show QR if secret generated --}}
+            @if (session('2fa_qr'))
+                <hr>
+
+                <p><strong>Scan this QR code using Google Authenticator:</strong></p>
+
+                <img src="{{ session('2fa_qr') }}" class="mb-3" style="max-width:250px;">
+
+                <p><strong>Secret Key:</strong> {{ session('2fa_secret_temp') }}</p>
+
+                <form action="{{ route('admin.2fa.enable') }}" method="POST">
+                    @csrf
+                    <label>Enter OTP</label>
+                    <input type="text" name="otp" class="form-control mb-3" required placeholder="123456">
+
+                    @error('otp')
+                        <div class="text-danger">{{ $message }}</div>
+                    @enderror
+
+                    <button type="submit" class="btn btn-success">Activate 2FA</button>
+                </form>
+            @endif
+        @endif
+
+    </div>
+</div>
+
+
             </div>
         </div>
     </div>

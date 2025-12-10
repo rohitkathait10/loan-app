@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminSupportController;
 use App\Http\Controllers\Admin\AdminAgentController;
 use App\Http\Controllers\Admin\AdminAdvertisementController;
 use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminAuthController;
 
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\KycController;
@@ -68,6 +69,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/profile/update', [AdminProfileController::class, 'updateProfile'])->name('profile.update');
     Route::post('/change-password', [AdminProfileController::class, 'changePassword'])->name('change-password');
 
+    Route::post('2fa/generate', [AdminAuthController::class, 'generate2FA'])->name('2fa.generate');
+
+    Route::post('2fa/enable', [AdminAuthController::class, 'enable2FA'])->name('2fa.enable');
+
+    Route::post('2fa/disable', [AdminAuthController::class, 'disable2FA'])->name('2fa.disable');
+
+
     Route::get('/membership-card', [AdminController::class, 'showMembershipCard'])->name('membership-card');
 
     Route::get('/customers', [AdminUserController::class, 'index'])->name('users');
@@ -86,7 +94,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders');
     Route::get('/orders/show/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/update-status/{order}', [AdminOrderController::class, 'updateStatus'])
-     ->name('orders.update-status');
+        ->name('orders.update-status');
 
 
     Route::get('/agents', [AdminAgentController::class, 'index'])->name('agents');

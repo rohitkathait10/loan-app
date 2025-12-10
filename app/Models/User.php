@@ -58,6 +58,8 @@ class User extends Authenticatable
         'terms_accepted',
         'marketing_consent',
         'consent_given_at',
+        'google2fa_secret',
+        'google2fa_enabled',
     ];
 
     /**
