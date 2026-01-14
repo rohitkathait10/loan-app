@@ -32,12 +32,13 @@
                                         <th>S no.</th>
                                         <th>Name</th>
                                         <th>Phone</th>
-                                        <th>Email</th>
+                                        <!--<th>Email</th>-->
                                         <th>Salary Type</th>
                                         <th>Cibil Score</th>
                                         <th>Salary</th>
                                         <th>Loan Purpose</th>
-                                        <th>Action</th>
+                                        <th>Created At</th>
+                                        <th class="no-export">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -46,12 +47,13 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $lead->name }}</td>
                                             <td>{{ $lead->phone }}</td>
-                                            <td>{{ $lead->email }}</td>
+                                            <!--<td>{{ $lead->email }}</td>-->
                                             <td>{{ $lead->salary_type }}</td>
                                             <td>{{ $lead->cibil_score }}</td>
                                             <td>{{ $lead->monthly_income }}</td>
                                             <td>{{ $lead->loan_purpose }}</td>
-                                            <td>
+                                            <td>{{ $lead->created_at }}</td>
+                                            <td class="no-export">
                                                 <a href="javascript:void(0)"
                                                     class="btn btn-primary btn-sm view-customer-btn"
                                                     data-id="{{ $lead->id }}">
@@ -71,7 +73,7 @@
                                         <th>Cibil Score</th>
                                         <th>Salary</th>
                                         <th>Loan Purpose</th>
-                                        <th>Action</th>
+                                        <th class="no-export">Action</th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -98,32 +100,39 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function() {
-            $('#basic-datatables').DataTable({
-                dom: 'Bfrtip',
-                buttons: [{
-                        extend: 'csvHtml5',
-                        text: 'Export CSV',
-                        className: 'btn btn-outline-primary btn-sm me-2'
-                    },
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Export Excel',
-                        className: 'btn btn-outline-success btn-sm me-2'
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        text: 'Export PDF',
-                        className: 'btn btn-outline-danger btn-sm'
-                    }
-                ],
-                pageLength: 10,
-                order: [
-                    [1, 'desc']
-                ],
-                responsive: true
-            });
-        });
+       $('#basic-datatables').DataTable({
+    dom: 'Bfrtip',
+    buttons: [
+        {
+            extend: 'csvHtml5',
+            text: 'Export CSV',
+            className: 'btn btn-outline-primary btn-sm me-2',
+            exportOptions: {
+                columns: ':not(.no-export)'
+            }
+        },
+        {
+            extend: 'excelHtml5',
+            text: 'Export Excel',
+            className: 'btn btn-outline-success btn-sm me-2',
+            exportOptions: {
+                columns: ':not(.no-export)'
+            }
+        },
+        {
+            extend: 'pdfHtml5',
+            text: 'Export PDF',
+            className: 'btn btn-outline-danger btn-sm',
+            exportOptions: {
+                columns: ':not(.no-export)'
+            }
+        }
+    ],
+    pageLength: 10,
+    order: [[1, 'desc']],
+    responsive: true
+});
+
     </script>
 
     <script>

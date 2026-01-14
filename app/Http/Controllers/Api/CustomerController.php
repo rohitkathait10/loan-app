@@ -153,6 +153,21 @@ class CustomerController extends Controller
                 'marketing_consent'  => 1,
                 'consent_given_at'   => now(),  
             ]));
+            
+            try {
+                Mail::send('emails.lead', [
+                    'name'      => $validated['name'],
+                    'phone'     => $validated['phone'],
+                    'loan_type' => $validated['loan_type'],
+                ], function ($message) use ($validated) {
+                    $message->to(env('CONTACT_RECEIVER_EMAIL'))
+                        ->subject('New Lead Registered: ' . $validated['name']);
+                });
+            } catch (\Exception $e) {
+                \Log::error('Lead Mail failed: ' . $e->getMessage());
+            }
+
+
 
             return response()->json([
                 'status'       => 'success',
@@ -452,15 +467,20 @@ class CustomerController extends Controller
                 'location'    => $location,
             ]);
 
-            Mail::send('emails.contact', [
-                'name' => $request->name,
-                'phone' => $request->phone,
-                'email' => $request->email,
-                'user_message' => $sanitizedMessage,
-            ], function ($message) use ($request) {
-                $message->to(env('CONTACT_RECEIVER_EMAIL'))
-                    ->subject('New Contact Message from ' . $request->name);
-            });
+            try {
+                Mail::send('emails.contact', [
+                    'name' => $request->name,
+                    'phone' => $request->phone,
+                    'email' => $request->email,
+                    'user_message' => $sanitizedMessage,
+                ], function ($message) use ($request) {
+                    $message->to(env('CONTACT_RECEIVER_EMAIL'))
+                            ->subject('New Contact Message from ' . $request->name);
+                });
+            } catch (\Exception $e) {
+                \Log::error('Mail sending failed: ' . $e->getMessage());
+            }
+
 
             return response()->json([
                 'status' => 'success',
